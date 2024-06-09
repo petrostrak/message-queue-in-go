@@ -10,7 +10,8 @@ import (
 
 func main() {
 	cfg := &Config{
-		Addr: ":3000",
+		Addr:  ":3000",
+		Store: NewMemoryStore(),
 	}
 
 	s, err := NewServer(cfg)
@@ -18,5 +19,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(s)
+	s.Store.Push([]byte("foobar"))
+	data, err := s.Store.Fetch(0)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(string(data))
 }

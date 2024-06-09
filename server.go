@@ -1,12 +1,12 @@
 package main
 
 type Config struct {
-	Addr string
+	Addr  string
+	Store Storer
 }
 
 type Server struct {
 	*Config
-	Store Storer
 }
 
 func NewServer(cfg *Config) (*Server, error) {
