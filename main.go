@@ -1,10 +1,22 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 // Underlying storage (in memory, on disk, s3)
 // Server (http, tcp)
 
 func main() {
-	fmt.Println("hello world!")
+	cfg := &Config{
+		Addr: ":3000",
+	}
+
+	s, err := NewServer(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(s)
 }
