@@ -3,3 +3,6 @@ run: build
 
 build:
 	@go build -o bin/msgq
+
+test:
+	@go test -v ./...
