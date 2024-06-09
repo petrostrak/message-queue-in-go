@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestStorate(t *testing.T) {
+func TestStorage(t *testing.T) {
 	s := NewMemoryStore()
 
 	for i := 0; i < 100; i++ {
