@@ -16,12 +16,14 @@ type Producer interface {
 }
 
 type HTTPProducer struct {
-	Addr string
+	Addr        string
+	ProduceChan chan<- Message
 }
 
-func NewHTTPProducer(addr string) *HTTPProducer {
+func NewHTTPProducer(addr string, produceChan chan Message) *HTTPProducer {
 	return &HTTPProducer{
-		Addr: addr,
+		Addr:        addr,
+		ProduceChan: produceChan,
 	}
 }
 
@@ -40,9 +42,9 @@ func (p *HTTPProducer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("invalid action")
 			return
 		}
-		topic := parts[1]
-		fmt.Println(topic)
+		p.ProduceChan <- Message{
+			Topic: parts[1],
+			Data:  []byte("some data"),
+		}
 	}
-
-	fmt.Println(parts)
 }

@@ -10,20 +10,28 @@ type Config struct {
 	StorerProducerFunc StorerProducerFunc
 }
 
+type Message struct {
+	Topic string
+	Data  []byte
+}
+
 type Server struct {
 	*Config
-	topics    map[string]Storer
-	consumers []Consumer
-	producers []Producer
-	quit      chan struct{}
+	topics      map[string]Storer
+	consumers   []Consumer
+	producers   []Producer
+	quit        chan struct{}
+	produceChan chan Message
 }
 
 func NewServer(cfg *Config) (*Server, error) {
+	prodChan := make(chan Message)
 	return &Server{
-		Config:    cfg,
-		topics:    make(map[string]Storer),
-		producers: []Producer{NewHTTPProducer(cfg.Addr)},
-		quit:      make(chan struct{}),
+		Config:      cfg,
+		topics:      make(map[string]Storer),
+		producers:   []Producer{NewHTTPProducer(cfg.Addr, prodChan)},
+		quit:        make(chan struct{}),
+		produceChan: prodChan,
 	}, nil
 }
 
@@ -35,12 +43,13 @@ func (s *Server) Start() {
 	}
 
 	for _, producer := range s.producers {
-		if err := producer.Start(); err != nil {
-			fmt.Println(err)
-		}
+		go func(p Producer) {
+			if err := p.Start(); err != nil {
+				fmt.Println(err)
+			}
+		}(producer)
 	}
-
-	<-s.quit
+	s.loop()
 }
 
 func (s *Server) createTopic(name string) bool {
@@ -54,4 +63,15 @@ func (s *Server) createTopic(name string) bool {
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.URL.Path)
+}
+
+func (s *Server) loop() {
+	for {
+		select {
+		case <-s.quit:
+			return
+		case msg := <-s.produceChan:
+			fmt.Println("produced msg", msg)
+		}
+	}
 }
