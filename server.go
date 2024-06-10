@@ -20,9 +20,10 @@ type Server struct {
 
 func NewServer(cfg *Config) (*Server, error) {
 	return &Server{
-		Config: cfg,
-		topics: make(map[string]Storer),
-		quit:   make(chan struct{}),
+		Config:    cfg,
+		topics:    make(map[string]Storer),
+		producers: []Producer{NewHTTPProducer(cfg.Addr)},
+		quit:      make(chan struct{}),
 	}, nil
 }
 
