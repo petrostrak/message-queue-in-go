@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 )
 
 type Consumer interface {
@@ -29,5 +30,19 @@ func (p *HTTPProducer) Start() error {
 	return http.ListenAndServe(p.Addr, p)
 }
 func (p *HTTPProducer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL.Path)
+	var (
+		path  = strings.TrimPrefix(r.URL.Path, "/")
+		parts = strings.Split(path, "/")
+	)
+
+	if r.Method == "POST" {
+		if len(parts) != 2 {
+			fmt.Println("invalid action")
+			return
+		}
+		topic := parts[1]
+		fmt.Println(topic)
+	}
+
+	fmt.Println(parts)
 }
