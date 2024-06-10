@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 )
 
@@ -21,11 +20,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	s.Store.Push([]byte("foobar"))
-	data, err := s.Store.Fetch(0)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(string(data))
+	s.Start()
 }

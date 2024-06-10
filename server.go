@@ -1,6 +1,9 @@
 package main
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 type Config struct {
 	Addr               string
@@ -20,7 +23,7 @@ func NewServer(cfg *Config) (*Server, error) {
 }
 
 func (s *Server) Start() {
-	http.ListenAndServe(s.Addr, nil)
+	http.ListenAndServe(s.Addr, s)
 }
 
 func (s *Server) createTopic(name string) bool {
@@ -30,4 +33,8 @@ func (s *Server) createTopic(name string) bool {
 	}
 
 	return false
+}
+
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(r.URL.Path)
 }
