@@ -14,6 +14,7 @@ type Server struct {
 	*Config
 	topics    map[string]Storer
 	consumers []Consumer
+	producers []Producer
 	quit      chan struct{}
 }
 
@@ -31,6 +32,13 @@ func (s *Server) Start() {
 			fmt.Println(err)
 		}
 	}
+
+	for _, producer := range s.producers {
+		if err := producer.Start(); err != nil {
+			fmt.Println(err)
+		}
+	}
+
 	<-s.quit
 }
 
