@@ -12,18 +12,26 @@ type Config struct {
 
 type Server struct {
 	*Config
-	topics map[string]Storer
+	topics    map[string]Storer
+	consumers []Consumer
+	quit      chan struct{}
 }
 
 func NewServer(cfg *Config) (*Server, error) {
 	return &Server{
 		Config: cfg,
 		topics: make(map[string]Storer),
+		quit:   make(chan struct{}),
 	}, nil
 }
 
 func (s *Server) Start() {
-	http.ListenAndServe(s.Addr, s)
+	for _, consumer := range s.consumers {
+		if err := consumer.Start(); err != nil {
+			fmt.Println(err)
+		}
+	}
+	<-s.quit
 }
 
 func (s *Server) createTopic(name string) bool {
