@@ -1,23 +1,19 @@
 package main
 
 import (
-	"fmt"
+	"bytes"
+	"net/http"
 	"testing"
 )
 
 func TestStorage(t *testing.T) {
-	s := NewMemoryStore()
+	payload := []byte("a random payload")
+	resp, err := http.Post("http://localhost:3000/publish/topic_1", "application/octet-stream", bytes.NewReader(payload))
+	if err != nil {
+		t.Error(err)
+	}
 
-	for i := 0; i < 100; i++ {
-		key := fmt.Sprintf("foobarbaz_%d", i)
-		offset, err := s.Push([]byte(key))
-		if err != nil {
-			t.Error(err)
-		}
-		data, err := s.Fetch(offset)
-		if err != nil {
-			t.Error(err)
-		}
-		fmt.Println(string(data))
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected status code 200 but got %d\n", resp.StatusCode)
 	}
 }
