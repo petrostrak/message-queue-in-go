@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 )
 
@@ -52,13 +53,16 @@ func (s *Server) Start() {
 	s.loop()
 }
 
-func (s *Server) createTopic(name string) bool {
-	if _, found := s.topics[name]; !found {
-		s.topics[name] = s.StorerProducerFunc()
-		return true
-	}
+func (s *Server) publish(msg Message) error {
+	s.createTopicIfNotExists(msg.Topic)
+	return nil
+}
 
-	return false
+func (s *Server) createTopicIfNotExists(topic string) {
+	if _, found := s.topics[topic]; !found {
+		s.topics[topic] = s.StorerProducerFunc()
+		slog.Info("created new topic", "topic", topic)
+	}
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -71,7 +75,9 @@ func (s *Server) loop() {
 		case <-s.quit:
 			return
 		case msg := <-s.produceChan:
-			fmt.Println("produced msg", msg)
+			if err := s.publish(msg); err != nil {
+				slog.Error("failed to publish", "err", err)
+			}
 		}
 	}
 }
