@@ -53,16 +53,18 @@ func (s *Server) Start() {
 	s.loop()
 }
 
-func (s *Server) publish(msg Message) error {
-	s.createTopicIfNotExists(msg.Topic)
-	return nil
+func (s *Server) publish(msg Message) (int, error) {
+	store := s.getStoreForTopic(msg.Topic)
+	return store.Push(msg.Data)
 }
 
-func (s *Server) createTopicIfNotExists(topic string) {
+func (s *Server) getStoreForTopic(topic string) Storer {
 	if _, found := s.topics[topic]; !found {
 		s.topics[topic] = s.StorerProducerFunc()
 		slog.Info("created new topic", "topic", topic)
 	}
+
+	return s.topics[topic]
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -75,8 +77,11 @@ func (s *Server) loop() {
 		case <-s.quit:
 			return
 		case msg := <-s.produceChan:
-			if err := s.publish(msg); err != nil {
+			offset, err := s.publish(msg)
+			if err != nil {
 				slog.Error("failed to publish", "err", err)
+			} else {
+				slog.Info("produced message", "offset", offset)
 			}
 		}
 	}
